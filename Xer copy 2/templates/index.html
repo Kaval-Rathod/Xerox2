@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Print Application</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"],
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Print Application</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <label for="file">Select File</label>
+        <input type="file" name="file" id="file" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <h2>Print Options</h2>
+    <form id="print-form">
+        <input type="hidden" id="filename" name="filename">
+        <label for="printer">Printer</label>
+        <select id="printer" name="printer">
+            {% for printer in printers %}
+            <option value="{{ printer }}">{{ printer }}</option>
+            {% endfor %}
+        </select>
+        <label for="copies">Copies</label>
+        <input type="number" id="copies" name="copies" value="1" min="1">
+        <label for="page_size">Page Size</label>
+        <input type="text" id="page_size" name="page_size" value="A4">
+        <label for="pages_per_sheet">Pages Per Sheet</label>
+        <input type="number" id="pages_per_sheet" name="pages_per_sheet" value="1" min="1">
+        <label for="scale">Scale</label>
+        <select id="scale" name="scale">
+            <option value="Default">Default</option>
+            <option value="Fit to printable area">Fit to printable area</option>
+            <option value="Fit to page">Fit to page</option>
+        </select>
+        <label for="two_sided">Print on Both Sides</label>
+        <input type="checkbox" id="two_sided" name="two_sided">
+        <button type="button" onclick="submitPrintForm()">Print</button>
+    </form>
+
+    <script>
+        document.querySelector('form[action="/upload"]').onsubmit = function(event) {
+            event.preventDefault();
+            var formData = new FormData(this);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                if (data.status === 'File uploaded successfully') {
+                    document.getElementById('filename').value = data.filename;
+                    alert('File uploaded successfully');
+                } else {
+                    alert('Upload failed: ' + data.status);
+                }
+            });
+        };
+
+        function submitPrintForm() {
+            var formData = {
+                filename: document.getElementById('filename').value,
+                printer: document.getElementById('printer').value,
+                copies: document.getElementById('copies').value,
+                page_size: document.getElementById('page_size').value,
+                pages_per_sheet: document.getElementById('pages_per_sheet').value,
+                scale: document.getElementById('scale').value,
+                two_sided: document.getElementById('two_sided').checked
+            };
+            fetch('/print', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            }).then(response => response.json())
+            .then(data => {
+                alert(data.status);
+            });
+        }
+    </script>
+</body>
+</html>
